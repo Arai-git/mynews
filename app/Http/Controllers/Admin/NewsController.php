@@ -5,6 +5,10 @@ use App\Http\Controllers\Controller;
 
 use App\News;
 
+use App\History;
+
+use Carbon\Carbon;
+
 class NewsController extends Controller
 {
   public function add()
@@ -52,7 +56,9 @@ class NewsController extends Controller
   public function edit(Request $request)
   {
     $news = News::find($request->id);
-
+    if (empty($news)) {
+        abort(404);    
+      }
     return view('admin.news.edit', ['news_form' => $news]);
   }
   
@@ -65,8 +71,12 @@ class NewsController extends Controller
     
     $news_form = $request->all();
     unset($news_form['_token']);
-    
     $news->fill($news_form)->save();
+    
+    $history = new History();
+    $history->news_id = $news->id;
+    $history->edited_at = Carbon::now();
+    $history->save();
     
     return redirect('admin/news/');
   }
